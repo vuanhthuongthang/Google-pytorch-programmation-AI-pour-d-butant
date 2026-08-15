@@ -12,7 +12,7 @@ Le cœur de ce cours démontre que la rétropropagation minimise l'énergie d'un
 ## Contenu des Scripts PyTorch
 Les scripts fournis sont exécutables directement sur le CPU sans nécessiter de carte graphique lourde :
 * **identification_raideurs_pont.py** : Identification des raideurs d'un pont (Système mécanique).
-* **reconstruction_mnist.py* : Reconstruction d'une image MNIST réelle en simulant un milieu hétérogène.
+* **reconstruction_mnist.py** : Reconstruction d'une image MNIST réelle en simulant un milieu hétérogène.
 * **retropropagation_paint_linux.py** : Rétropropagation sur un dessin Paint optimisé pour Linux Mint 22.3 en mode "Headless" (génération PNG sans interface graphique).
 * **retropropagation_paint_windows.py* : Rétropropagation sur un dessin Paint optimisé pour l'environnement natif de Windows 11 (affichage pop-up direct).
 
