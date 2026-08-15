@@ -1,0 +1,219 @@
+Cours de PyTorch pour débutant : De la Physique à l'IA
+Thang Formation - IA
+(Optimisé pour Windows 11 et Linux Mint 22.3)
+Ce document compile l'intégralité du cours détaillant le lien entre l'énergie thermodynamique, la rétropropagation, et la résolution de systèmes physiques linéaires (AX = Y), avec toutes les implémentations PyTorch complètes et adaptées aux environnements Windows et Linux.
+1. Fonction Loss et résolution du problème AX = Y
+La fonction de perte (loss) basée sur l'énergie thermodynamique représente l'écart à l'équilibre ou la dissipation d'un système. 
+La rétropropagation minimise cette énergie par la règle de la chaîne. 
+Pour un modèle linéaire ou une couche unitaire, le gradient de cette perte quadratique mène directement à l'équation matricielle AX = Y, où A est la matrice des coefficients ou des poids du système.
+
+Lien entre Énergie et Problème Linéaire
+
+• Énergie / Perte : Définie par une erreur quadratique, analogue à une énergie potentielle harmonique.
+L = 1/2 ||AX - Y||²
+
+• Dérivation : Le calcul du gradient de la perte par rapport aux paramètres A ou X annule cette énergie au point d'équilibre.
+
+• Matrice A : Représente l'opérateur de transfert, la matrice de conductance, les poids synaptiques ou le système physique linéaire cherché.
+
+Pourquoi la Rétropropagation résout AX = Y
+• Descente de gradient : L'algorithme ajuste les variables pour suivre la pente descendante de l'énergie.
+• Linéarité : Si le modèle ou la couche physique est linéaire, la dérivée première de l'énergie par rapport à la matrice A donne l'équation normale ou l'expression linéaire AX = Y.
+• Inversion effective : La propagation inverse équivaut à propager le résidu d'erreur à travers l'opérateur transposé Aᵀ, résolvant ainsi l'état optimal ou les coefficients de la matrice A.
+
+La Démonstration Mathématique Complète
+
+Voici la démonstration mathématique rigoureuse qui montre comment 
+la minimisation d'une fonction d'énergie thermodynamique (sous forme d'erreur quadratique) par descente de gradient (rétropropagation) permet de trouver la matrice A du système linéaire AX = Y.
+
+Définition de la fonction d'énergie (Loss)
+
+En physique, l'énergie d'un système élastique ou harmonique est souvent proportionnelle au carré de l'écart à l'équilibre. La fonction d'énergie s'écrit avec la norme de Frobenius :
+L(A) = 1/2 ||AX - Y||²_F
+
+En utilisant la trace matricielle (Tr), cette énergie se développe ainsi :
+L(A) = 1/2 Tr((AX - Y)ᵀ(AX - Y))
+
+Calcul mathématique du Gradient
+
+Calculons la différentielle de L par rapport à A (notée dA) en utilisant la cyclicité de la trace :
+dL = Tr((AXXᵀ - YXᵀ)ᵀ dA)
+
+Nous obtenons donc directement le gradient :
+∇_A L = (AX - Y)Xᵀ
+
+Résolution et Équilibre
+
+La méthode de rétropropagation applique une correction à la matrice A dans la direction opposée au gradient :
+A_nouveau = A_ancien - η · (AX - Y)Xᵀ
+
+À l'équilibre thermodynamique, le système atteint son énergie minimale. La physique impose que le gradient s'annule :
+(AX - Y)Xᵀ = 0   =>   AXXᵀ = YXᵀ
+
+La solution optimale pour la matrice A est alors donnée par l'équation normale (liée à la pseudo-inverse de Penrose-Moore) :
+A = YXᵀ(XXᵀ)⁻¹
+
+Exemples de Systèmes Physiques*
+
+1. Un réseau de ressorts (Système mécanique) : L'énergie thermodynamique (Loss) est l'énergie potentielle élastique stockée dans le système (E = 1/2 k Δx²). 
+La rétropropagation ajuste virtuellement les rigidités A pour que l'énergie calculée corresponde à l'énergie réelle.
+
+2. Un réseau électrique de résistances (Loi d'Ohm) : L'énergie est la puissance dissipée par effet Joule. Le flot d'électrons calcule naturellement et instantanément le gradient de l'énergie.
+
+3. L'imagerie médicale (Problème inverse / Scanner) : La matrice A (la physique du scanner) est connue et fixe. 
+On utilise la rétropropagation pour ajuster l'image interne du corps (X). À chaque itération, l'erreur de reconstruction est rétropropagée à travers l'opérateur physique Aᵀ (rétroprojection).
+4. Apprentissage du Milieu A (Milieux Hétérogènes et Images)
+
+Dans les applications réelles, les matrices A ont souvent des coefficients qui ressemblent à une image (valeurs réparties pixel par pixel). 
+On appelle cela un milieu hétérogène (ex: Optique en milieu diffusant, Tomographie de conductivité, Acoustique des matériaux). 
+La règle de mise à jour ΔA = (AX - Y)Xᵀ permet de reconstruire cette cartographie interne étape par étape.
+
+5. Implémentations PyTorch (Programmation sur CPU)
+
+Les scripts suivants sont écrits en Python avec PyTorch. Ils sont exécutables directement sur le CPU de votre PC portable (sous Windows 11 ou Linux Mint 22.3) sans nécessiter de carte graphique lourde.
+
+Code 1 : Identification des raideurs d'un pont (Système mécanique) "identification_raideurs_pont.py"
+
+import torch
+
+# 1. GÉNÉRATION DES DONNÉES PHYSIQUES RÉELLES
+VRAI_k1, VRAI_k2 = 5.0, 3.0
+X = torch.tensor([[1.0, 2.0, 1.5, 3.0], [2.0, 1.0, 4.0, 2.5]])
+Y = torch.tensor([[VRAI_k1 * 1.0, VRAI_k1 * 2.0, VRAI_k1 * 1.5, VRAI_k1 * 3.0],
+                  [VRAI_k2 * 2.0, VRAI_k2 * 1.0, VRAI_k2 * 4.0, VRAI_k2 * 2.5]])
+
+# 2. MODÉLISATION DU SYSTÈME PHYSIQUE A
+k1 = torch.tensor(1.0, requires_grad=True)
+k2 = torch.tensor(1.0, requires_grad=True)
+taux_apprentissage = 0.05
+
+for etape in range(100):
+    A = torch.diag(torch.stack([k1, k2]))
+    Y_virtuel = torch.matmul(A, X)
+    
+    energie_loss = 0.5 * torch.sum((Y_virtuel - Y) ** 2)
+    energie_loss.backward()
+    
+    with torch.no_grad():
+        k1 -= taux_apprentissage * k1.grad
+        k2 -= taux_apprentissage * k2.grad
+        
+    k1.grad.zero_()
+    k2.grad.zero_()
+
+print(f"Raideur k1 estimée = {k1.item():.4f}")
+print(f"Raideur k2 estimée = {k2.item():.4f}")
+
+Code 2 : Reconstruction d'une image MNIST réelle "reconstruction_mnist.py"
+import torch
+import torchvision
+import torchvision.transforms as transforms
+import matplotlib.pyplot as plt
+
+torch.manual_seed(42)
+dataset = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transforms.ToTensor())
+image_reelle, label = dataset[0]
+VRAI_A = image_reelle.squeeze() 
+
+X = torch.rand((28, 800))
+Y = torch.matmul(VRAI_A, X)
+
+A_estime = torch.rand((28, 28), requires_grad=True)
+taux_apprentissage = 0.005
+iterations = 1200
+
+for etape in range(iterations):
+    Y_predit = torch.matmul(A_estime, X)
+    loss = 0.5 * torch.sum((Y_predit - Y) ** 2)
+    loss.backward()
+    
+    with torch.no_grad():
+        A_estime -= taux_apprentissage * A_estime.grad
+    A_estime.grad.zero_()
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
+ax1.imshow(VRAI_A.detach().numpy(), cmap='hot')
+ax1.set_title("Vrai Milieu Physique A")
+ax2.imshow(A_estime.detach().numpy(), cmap='hot')
+ax2.set_title("Milieu Reconstruit")
+plt.show()
+
+Code 3 : Rétropropagation sur un dessin Paint (Linux Mint 22.3 - Mode Headless) "retropropagation_paint_linux.py"
+
+Ce script est optimisé pour s'exécuter dans le terminal Linux sans interface graphique (idéal pour les serveurs ou environnements virtuels isolés). Il sauvegarde le résultat au format PNG.
+import torch
+import torchvision.transforms as transforms
+import matplotlib.pyplot as plt
+from PIL import Image
+import os
+import matplotlib
+matplotlib.use('Agg') # Mode Headless pour Linux Mint
+
+torch.manual_seed(42)
+nom_fichier_entree = "mon_dessin.png"
+nom_fichier_sortie = "mon_dessin_reconstruit.png"
+
+image_pil = Image.open(nom_fichier_entree).convert('L').resize((28, 28))
+image_tensor = transforms.ToTensor()(image_pil)
+VRAI_A = 1.0 - image_tensor.squeeze()
+
+X = torch.rand((28, 800))
+Y = torch.matmul(VRAI_A, X)
+
+A_estime = torch.rand((28, 28), requires_grad=True)
+taux_apprentissage = 0.005
+
+for etape in range(1200):
+    loss = 0.5 * torch.sum((torch.matmul(A_estime, X) - Y) ** 2)
+    loss.backward()
+    with torch.no_grad():
+        A_estime -= taux_apprentissage * A_estime.grad
+    A_estime.grad.zero_()
+
+fig, (ax1, ax2) = plt.subplots(1, 2)
+ax1.imshow(VRAI_A.detach().numpy(), cmap='gray')
+ax2.imshow(A_estime.detach().numpy(), cmap='gray')
+plt.savefig(nom_fichier_sortie, dpi=150)
+plt.close()
+print("Fichier sauvegardé avec succès sous Linux Mint.")
+
+Code 4 : Rétropropagation sur un dessin Paint (Windows 11) "retropropagation_paint_windows.py"
+
+Ce script est optimisé pour l'environnement natif de Windows 11. Il sauvegarde l'image ET affiche directement la fenêtre pop-up.
+import torch
+import torchvision.transforms as transforms
+import matplotlib.pyplot as plt
+from PIL import Image
+import os
+
+torch.manual_seed(42)
+nom_fichier_entree = "mon_dessin.png"
+nom_fichier_sortie = "mon_dessin_reconstruit.png"
+
+image_pil = Image.open(nom_fichier_entree).convert('L').resize((28, 28))
+image_tensor = transforms.ToTensor()(image_pil)
+VRAI_A = 1.0 - image_tensor.squeeze()
+
+X = torch.rand((28, 800))
+Y = torch.matmul(VRAI_A, X)
+
+A_estime = torch.rand((28, 28), requires_grad=True)
+taux_apprentissage = 0.005
+
+for etape in range(1200):
+    loss = 0.5 * torch.sum((torch.matmul(A_estime, X) - Y) ** 2)
+    loss.backward()
+    with torch.no_grad():
+        A_estime -= taux_apprentissage * A_estime.grad
+    A_estime.grad.zero_()
+
+fig, (ax1, ax2) = plt.subplots(1, 2)
+ax1.imshow(VRAI_A.detach().numpy(), cmap='gray')
+ax1.set_title("Original (Paint)")
+ax2.imshow(A_estime.detach().numpy(), cmap='gray')
+ax2.set_title("Reconstruit")
+plt.savefig(nom_fichier_sortie, dpi=150)
+plt.show() # Ouvre la fenêtre sous Windows 11
+
+
+Cours sous licence MIT pour Thang Formation – IA le 15-08-2026 à Cergy
