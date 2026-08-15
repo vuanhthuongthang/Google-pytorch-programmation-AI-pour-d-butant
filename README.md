@@ -14,7 +14,7 @@ Les scripts fournis sont exécutables directement sur le CPU sans nécessiter de
 * **identification_raideurs_pont.py** : Identification des raideurs d'un pont (Système mécanique).
 * **reconstruction_mnist.py** : Reconstruction d'une image MNIST réelle en simulant un milieu hétérogène.
 * **retropropagation_paint_linux.py** : Rétropropagation sur un dessin Paint optimisé pour Linux Mint 22.3 en mode "Headless" (génération PNG sans interface graphique).
-* **retropropagation_paint_windows.py* : Rétropropagation sur un dessin Paint optimisé pour l'environnement natif de Windows 11 (affichage pop-up direct).
+* **retropropagation_paint_windows.py** : Rétropropagation sur un dessin Paint optimisé pour l'environnement natif de Windows 11 (affichage pop-up direct).
 
 ## Licence
 Cours sous licence MIT pour Thang Formation – IA.
